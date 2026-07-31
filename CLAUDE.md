@@ -20,6 +20,10 @@ There is no test suite and no lint script configured in this repo. `prettier-plu
 
 To verify a content or component change, run `npm run dev` and visit the relevant route, or run `npm run build` to catch Markdoc validation / frontmatter schema errors (these throw at build time, not just at runtime).
 
+## PR conventions
+
+PRs follow the template at `.github/pull_request_template.md` (Summary / Screenshots / Test plan). Any PR that changes UI (layout, styling, new/updated components, content rendering) must include before/after screenshots in the Screenshots section — delete that section for non-visual changes (content copy edits, config, docs, refactors).
+
 ## Architecture
 
 ### Content lives outside `src/`, in `content/`
