@@ -25,12 +25,8 @@ const { isRunnable } = Astro.props;
   import { EditorState, Compartment } from "@codemirror/state";
   import { indentWithTab } from "@codemirror/commands";
   import { python } from "@codemirror/lang-python";
-  import {
-    runCode,
-    setEngine,
-    setOptions,
-    PythonError,
-  } from "client-side-python-runner";
+  import { runCode, setEngine, setOptions } from "client-side-python-runner";
+  import type { PythonError } from "client-side-python-runner";
 
   const updateOutput = (
     newText: string,

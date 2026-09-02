@@ -22,7 +22,7 @@ async function parseAndTransform({ content }: { content: string }) {
   return transformedContent;
 }
 
-function validateFrontmatter<T extends z.ZodTypeAny>({
+function validateFrontmatter<T extends z.ZodType>({
   frontmatter,
   schema,
   filepath,
@@ -43,7 +43,7 @@ function validateFrontmatter<T extends z.ZodTypeAny>({
   }
 }
 
-export async function read<T extends z.ZodTypeAny>({
+export async function read<T extends z.ZodType>({
   filepath,
   schema,
 }: {
@@ -72,7 +72,7 @@ export async function read<T extends z.ZodTypeAny>({
   };
 }
 
-export async function readOne<T extends z.ZodTypeAny>({
+export async function readOne<T extends z.ZodType>({
   directory,
   slug,
   frontmatterSchema: schema,
@@ -88,7 +88,7 @@ export async function readOne<T extends z.ZodTypeAny>({
   });
 }
 
-export async function readAll<T extends z.ZodTypeAny>({
+export async function readAll<T extends z.ZodType>({
   directory,
   frontmatterSchema: schema,
 }: {

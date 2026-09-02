@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Cindy's personal site (`cindyc-dev.github.io`): a statically-generated Astro site showcasing projects, a blog, and university course notes/tutorials. Built with Astro, Markdoc (for content authoring), React (for a couple of interactive islands), and Tailwind CSS. Deployed to GitHub Pages via `.github/workflows/deploy.yml` on every push to `main`.
+Cindy's personal site (`cindyc-dev.github.io`): a statically-generated Astro site showcasing projects, a blog, and university course notes/tutorials. Built with Astro, Markdoc (for content authoring), and Tailwind CSS (v4, via the `@tailwindcss/vite` plugin — no `@astrojs/tailwind`). Deployed to GitHub Pages via `.github/workflows/deploy.yml` on every push to `main`.
+
+`@astrojs/react`/`react`/`react-dom` are installed but currently unused — there are no `.tsx`/`.jsx` components or `client:*` islands anywhere in `src/`. Don't assume a React island exists; check for one before reaching for React.
 
 ## Commands
 
@@ -82,4 +84,8 @@ Dark/light mode uses Tailwind's `class` strategy (`ThemeScript.astro` toggles th
 
 ### Interactive/embedded content
 
-A few Markdoc tags render non-trivial client-side functionality: `pycode` (`PythonCode.astro`) runs Python in-browser via `pyodide`/`client-side-python-runner` with a CodeMirror editor; `mermaid` (`Mermaid.astro`) renders diagrams with `mermaid` + `svg-pan-zoom`. These are heavier client bundles — only use them in content where actually needed.
+A few Markdoc tags render non-trivial client-side functionality: `pycode` (`PythonCode.astro`) runs Python in-browser via a Skulpt engine (loaded from a CDN, via the `client-side-python-runner` wrapper) with a CodeMirror editor; `mermaid` (`Mermaid.astro`) renders diagrams via the Mermaid library loaded from a CDN (`<script type="module">` importing `mermaid@10` from jsdelivr). Both load their actual rendering engine from a CDN at a pinned version inside the `.astro` component itself, independent of the `pyodide`/`mermaid`/`svg-pan-zoom` npm packages in `package.json` (those npm packages are currently unused — don't assume bumping them changes runtime behavior; the CDN version pins are what actually matter and must be updated separately, in the component file, with visual verification).
+
+### Dependency updates
+
+`client-side-python-runner` (the Python code-runner used by `pycode`) is deprecated upstream with no maintained replacement on npm — it still works, so it stays pinned at its latest published version until a replacement is evaluated. When bumping `astro` or `@astrojs/*` integrations, watch for internal Astro config-shape changes across majors (e.g. `config.style.postcss` was removed/relocated) — an integration can fail at `astro:config:setup` even when its declared peer range doesn't flag a conflict, so always run `npm run build` after a bump, not just `npm outdated`/`npm audit`. TypeScript is intentionally capped below its `latest` dist-tag when `@astrojs/check`'s peer range (`^5.0.0 || ^6.0.0` as of writing) doesn't yet support the newest major.
