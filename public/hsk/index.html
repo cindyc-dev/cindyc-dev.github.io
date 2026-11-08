@@ -1,0 +1,958 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HSK 3-4 SRS</title>
+<style>
+:root{--bg:#faf8f5;--fg:#222;--card:#fff;--mut:#777;--acc:#c0392b;--bd:#e4ded6}
+@media(prefers-color-scheme:dark){:root{--bg:#171717;--fg:#eee;--card:#222;--mut:#999;--acc:#e8685a;--bd:#333}}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--fg);display:flex;justify-content:center}
+main{width:100%;max-width:520px;padding:16px}
+h1{font-size:18px;margin:0 0 12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button,select,input,textarea{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px 14px}
+button{cursor:pointer}
+button.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
+.stats{display:flex;gap:8px;margin:12px 0}
+.stat{flex:1;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font-size:22px}.stat span{font-size:12px;color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;min-height:260px;padding:24px;text-align:center;display:flex;flex-direction:column;justify-content:center;gap:10px;margin:12px 0}
+.hz{font-size:64px;line-height:1.2}
+.py{font-size:26px;color:var(--acc)}
+.mn{font-size:20px}
+.mut{color:var(--mut);font-size:13px}
+.rate{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.rate button{padding:12px 4px;font-size:14px}
+.hidden{display:none}
+textarea{width:100%;min-height:120px}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
+.tile{min-height:84px;display:flex;align-items:center;justify-content:center;text-align:center;padding:6px;font-size:16px;line-height:1.25}
+.tile.big{font-size:24px}
+.tile.sel{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+.tile.ok{opacity:.15;pointer-events:none}
+.tile.bad{background:var(--acc);color:#fff}
+.hud{display:flex;justify-content:space-between;margin:10px 0;font-size:15px}
+#sky{position:relative;height:340px;overflow:hidden;background:var(--card);border:1px solid var(--bd);border-radius:16px}
+#sky::after{content:"";position:absolute;left:0;right:0;bottom:36px;border-top:2px dashed var(--acc);opacity:.4}
+.fw{position:absolute;padding:6px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--bd);font-size:26px}
+#fin{width:100%;margin-top:10px;font-size:18px}
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,.6);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}
+.overlay button{color:var(--fg)}
+.ex{border-top:1px dashed var(--bd);padding-top:10px;margin-top:4px;font-size:17px}
+.ex small{display:block;color:var(--mut);font-size:13px}
+#ans{flex:1;min-width:0;font-size:18px}
+#fb{min-height:20px;margin:6px 0}
+.crow{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin:6px 0;display:flex;gap:12px;align-items:center}
+.crow .hz2{font-size:28px;min-width:64px;text-align:center}
+.crow .mid{flex:1;min-width:0}
+.crow .mid .p{color:var(--acc)}
+.crow .mid .m{font-size:14px}
+.badge{display:inline-block;font-size:11px;border:1px solid var(--bd);border-radius:6px;padding:1px 6px;margin-right:4px;color:var(--mut)}
+.badge.New{color:var(--mut)}.badge.Learning{color:#d68910;border-color:#d68910}.badge.Young{color:#2e86c1;border-color:#2e86c1}.badge.Mature{color:#27ae60;border-color:#27ae60}
+.bar{height:4px;background:var(--bd);border-radius:2px;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--acc);border-radius:2px}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.filters select,.filters input{padding:8px 10px;font-size:14px}
+</style>
+<meta name="theme-color" content="#c0392b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="HSK SRS">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+<main>
+<h1>HSK 3–4 Flashcards</h1>
+
+<div id="home">
+  <div class="row">
+    <select id="level"><option value="3">HSK 3</option><option value="4">HSK 4</option><option value="34">HSK 3 + 4</option><option value="W">Workplace phrases</option></select>
+    <select id="dir"><option value="f">汉字 → meaning</option><option value="b">Meaning → 汉字</option><option value="m">Mixed (both ways)</option></select>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <label class="mut">New cards/day <input id="newLimit" type="number" min="0" max="100" style="width:70px"></label>
+    <label class="mut"><input type="checkbox" id="showEx" style="padding:0"> Example sentences</label>
+    <label class="mut"><input type="checkbox" id="typeAns" style="padding:0"> Type answers</label>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="sDue">0</b><span>Due</span></div>
+    <div class="stat"><b id="sNew">0</b><span>New today</span></div>
+    <div class="stat"><b id="sLearned">0</b><span>Learned</span></div>
+  </div>
+  <div id="notice" class="hidden" style="background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:8px">
+    <span id="noteMsg"></span>
+    <div class="row" id="noteBtns" style="margin-top:8px"></div>
+  </div>
+  <button class="pri" id="start" style="width:100%">Start review</button>
+  <div class="row" style="margin-top:8px">
+    <button id="gMatch" style="flex:1">🧩 Match</button>
+    <button id="gFall" style="flex:1">☄️ Falling words</button>
+  </div>
+  <button id="gCards" style="width:100%;margin-top:8px">📚 All cards &amp; progress</button>
+  <p class="mut" id="hi"></p>
+  <details style="margin-top:20px">
+    <summary>Import / export</summary>
+    <p class="mut">Add words (one per line): <code>汉字,pinyin,meaning,level</code></p>
+    <textarea id="csv" placeholder="医院,yīyuàn,hospital,3"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button id="imp">Import words</button>
+      <button id="exp">Export progress</button>
+      <button id="impP">Restore progress</button>
+      <input type="file" id="file" class="hidden" accept=".json">
+    </div>
+    <p class="mut" id="msg"></p>
+  </details>
+  <p class="mut">Progress is saved on this device. Use “Export progress” as a backup.</p>
+</div>
+
+<div id="study" class="hidden">
+  <div class="row" style="justify-content:space-between"><button id="back">← Back</button><span class="mut" id="left"></span></div>
+  <div class="card" id="cardEl"></div>
+  <form id="ansWrap" class="row hidden" style="flex-wrap:nowrap;margin-bottom:8px">
+    <input id="ans" enterkeyhint="go" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <button class="pri" id="chk" type="submit">Check</button>
+  </form>
+  <p class="mut" id="fb"></p>
+  <button class="pri" id="show" style="width:100%">Show answer</button>
+  <div class="rate hidden" id="rate">
+    <button data-r="0">Again<br><small id="i0"></small></button>
+    <button data-r="1">Hard<br><small id="i1"></small></button>
+    <button data-r="2">Good<br><small id="i2"></small></button>
+    <button data-r="3">Easy<br><small id="i3"></small></button>
+  </div>
+</div>
+<div id="cards" class="hidden">
+  <div class="row" style="justify-content:space-between"><button id="cBack">← Back</button><span class="mut" id="cCount"></span></div>
+  <div class="filters">
+    <input id="cSearch" placeholder="Search 汉字 / pinyin / meaning" style="flex:1 1 100%">
+    <select id="cLevel"><option value="">All levels</option><option value="3">HSK 3</option><option value="4">HSK 4</option><option value="W">Workplace</option></select>
+    <select id="cState"><option value="">All states</option><option>New</option><option>Learning</option><option>Young</option><option>Mature</option><option value="Due">Due now</option></select>
+    <select id="cSort">
+      <option value="list">Sort: list order</option>
+      <option value="state">Competency</option>
+      <option value="interval">Interval</option>
+      <option value="ease">Ease</option>
+      <option value="due">Next due</option>
+      <option value="lapses">Lapses</option>
+      <option value="level">HSK level</option>
+      <option value="pinyin">Pinyin A–Z</option>
+    </select>
+    <button id="cDir" style="padding:8px 12px">↑</button>
+  </div>
+  <p class="mut" style="margin:0">New = unseen · Learning = lapsed/just started · Young = interval &lt; 21d · Mature = 21d+. Ease is the SM-2 factor (default 2.5).</p>
+  <div id="cList"></div>
+</div>
+
+<div id="match" class="hidden">
+  <div class="row" style="justify-content:space-between"><button id="mBack">← Back</button><span class="mut" id="mInfo"></span></div>
+  <div class="grid" id="mGrid"></div>
+  <div id="mDone" class="hidden" style="text-align:center">
+    <p id="mRes"></p><button class="pri" id="mAgain">Play again</button>
+  </div>
+</div>
+
+<div id="fall" class="hidden">
+  <div class="row" style="justify-content:space-between"><button id="fBack">← Back</button><span class="mut">Type pinyin (tones optional) or English</span></div>
+  <div class="hud"><span id="fScore">Score 0</span><span id="fLevel">Lv 1</span><span id="fLives">♥♥♥</span></div>
+  <div id="sky"></div>
+  <p class="mut" id="fMsg" style="min-height:20px;margin:6px 0 0"></p>
+  <input id="fin" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Type answer…">
+</div>
+</main>
+
+<script>
+const RAW = `
+阿姨|āyí|aunt|3
+矮|ǎi|short (height)|3
+爱好|àihào|hobby|3
+安静|ānjìng|quiet|3
+把|bǎ|(object marker); to hold|3
+搬|bān|to move (house/things)|3
+办法|bànfǎ|method, way|3
+办公室|bàngōngshì|office|3
+帮忙|bāngmáng|to help|3
+饱|bǎo|full (from eating)|3
+北方|běifāng|north|3
+被|bèi|(passive marker); by|3
+鼻子|bízi|nose|3
+比较|bǐjiào|relatively; to compare|3
+比赛|bǐsài|match, competition|3
+笔记本|bǐjìběn|notebook; laptop|3
+必须|bìxū|must|3
+变化|biànhuà|change|3
+别人|biérén|other people|3
+冰箱|bīngxiāng|refrigerator|3
+才|cái|only then; not until|3
+菜单|càidān|menu|3
+参加|cānjiā|to take part in|3
+草|cǎo|grass|3
+层|céng|floor, layer|3
+差|chà|to lack; poor|3
+超市|chāoshì|supermarket|3
+衬衫|chènshān|shirt|3
+成绩|chéngjì|results, grades|3
+城市|chéngshì|city|3
+迟到|chídào|to be late|3
+出现|chūxiàn|to appear|3
+厨房|chúfáng|kitchen|3
+词典|cídiǎn|dictionary|3
+聪明|cōngmíng|smart|3
+打扫|dǎsǎo|to clean, sweep|3
+打算|dǎsuàn|to plan|3
+带|dài|to bring, carry|3
+担心|dānxīn|to worry|3
+蛋糕|dàngāo|cake|3
+当然|dāngrán|of course|3
+灯|dēng|lamp, light|3
+地方|dìfang|place|3
+地铁|dìtiě|subway|3
+地图|dìtú|map|3
+电梯|diàntī|elevator|3
+电子邮件|diànzǐ yóujiàn|email|3
+动物|dòngwù|animal|3
+短|duǎn|short (length)|3
+锻炼|duànliàn|to exercise|3
+饿|è|hungry|3
+耳朵|ěrduo|ear|3
+发烧|fāshāo|to have a fever|3
+发现|fāxiàn|to discover|3
+方便|fāngbiàn|convenient|3
+放|fàng|to put, place|3
+放心|fàngxīn|to rest assured|3
+复习|fùxí|to review|3
+干净|gānjìng|clean|3
+敢|gǎn|to dare|3
+感冒|gǎnmào|cold (illness)|3
+刚才|gāngcái|just now|3
+根据|gēnjù|according to|3
+跟|gēn|with; to follow|3
+更|gèng|even more|3
+公园|gōngyuán|park|3
+故事|gùshi|story|3
+刮风|guāfēng|to be windy|3
+关系|guānxi|relationship|3
+关心|guānxīn|to care about|3
+关于|guānyú|about, regarding|3
+国家|guójiā|country|3
+过去|guòqù|the past; to go over|3
+害怕|hàipà|to be afraid|3
+黑板|hēibǎn|blackboard|3
+后来|hòulái|afterwards|3
+护照|hùzhào|passport|3
+花|huā|flower; to spend|3
+画|huà|to draw; painting|3
+坏|huài|bad; broken|3
+环境|huánjìng|environment|3
+换|huàn|to change, exchange|3
+黄河|Huáng Hé|Yellow River|3
+回答|huídá|to answer|3
+会议|huìyì|meeting|3
+或者|huòzhě|or|3
+几乎|jīhū|almost|3
+机会|jīhuì|opportunity|3
+记得|jìde|to remember|3
+季节|jìjié|season|3
+检查|jiǎnchá|to check, inspect|3
+简单|jiǎndān|simple|3
+健康|jiànkāng|healthy|3
+见面|jiànmiàn|to meet|3
+讲|jiǎng|to speak, explain|3
+教室|jiàoshì|classroom|3
+节日|jiérì|festival|3
+结婚|jiéhūn|to get married|3
+结束|jiéshù|to end|3
+解决|jiějué|to solve|3
+借|jiè|to borrow, lend|3
+经常|jīngcháng|often|3
+经过|jīngguò|to pass through|3
+经理|jīnglǐ|manager|3
+久|jiǔ|long (time)|3
+旧|jiù|old (things)|3
+爱情|àiqíng|love, romance|4
+安排|ānpái|to arrange|4
+安全|ānquán|safe; safety|4
+按时|ànshí|on time|4
+棒|bàng|great, excellent|4
+保护|bǎohù|to protect|4
+保证|bǎozhèng|to guarantee|4
+报名|bàomíng|to sign up|4
+抱|bào|to hug, hold|4
+抱歉|bàoqiàn|sorry|4
+本来|běnlái|originally|4
+笨|bèn|stupid, clumsy|4
+比如|bǐrú|for example|4
+毕业|bìyè|to graduate|4
+标准|biāozhǔn|standard|4
+表格|biǎogé|form, table|4
+表示|biǎoshì|to express, show|4
+表演|biǎoyǎn|to perform|4
+表扬|biǎoyáng|to praise|4
+并且|bìngqiě|and, moreover|4
+不过|búguò|but, however|4
+不得不|bùdébù|have no choice but to|4
+不管|bùguǎn|no matter|4
+不仅|bùjǐn|not only|4
+部分|bùfen|part, section|4
+擦|cā|to wipe|4
+猜|cāi|to guess|4
+材料|cáiliào|material|4
+参观|cānguān|to visit (a place)|4
+餐厅|cāntīng|restaurant|4
+厕所|cèsuǒ|toilet|4
+差不多|chàbuduō|almost, about the same|4
+尝|cháng|to taste|4
+超过|chāoguò|to exceed|4
+成功|chénggōng|success; to succeed|4
+成为|chéngwéi|to become|4
+诚实|chéngshí|honest|4
+乘坐|chéngzuò|to ride (a vehicle)|4
+重新|chóngxīn|again, anew|4
+抽烟|chōuyān|to smoke|4
+出差|chūchāi|to go on a business trip|4
+出发|chūfā|to set off|4
+出生|chūshēng|to be born|4
+辞职|cízhí|to resign|4
+从来|cónglái|always, ever|4
+粗心|cūxīn|careless|4
+存|cún|to save, store|4
+错误|cuòwù|mistake|4
+答案|dá'àn|answer|4
+打招呼|dǎ zhāohu|to greet|4
+打折|dǎzhé|to give a discount|4
+打针|dǎzhēn|to get an injection|4
+大概|dàgài|probably, roughly|4
+大使馆|dàshǐguǎn|embassy|4
+大约|dàyuē|approximately|4
+戴|dài|to wear (accessories)|4
+代替|dàitì|to replace|4
+当时|dāngshí|at that time|4
+到处|dàochù|everywhere|4
+倒|dào|to pour; to reverse|4
+道歉|dàoqiàn|to apologize|4
+得意|déyì|proud, pleased with oneself|4
+低|dī|low|4
+地球|dìqiú|the Earth|4
+地址|dìzhǐ|address|4
+调查|diàochá|to investigate; survey|4
+丢|diū|to lose|4
+动作|dòngzuò|movement, action|4
+堵车|dǔchē|traffic jam|4
+肚子|dùzi|stomach, belly|4
+短信|duǎnxìn|text message|4
+对话|duìhuà|dialogue|4
+对面|duìmiàn|opposite side|4
+发展|fāzhǎn|to develop|4
+法律|fǎlǜ|law|4
+翻译|fānyì|to translate|4
+烦恼|fánnǎo|worries; vexed|4
+反对|fǎnduì|to oppose|4
+方法|fāngfǎ|method|4
+方面|fāngmiàn|aspect|4
+访问|fǎngwèn|to visit; to interview|4
+放弃|fàngqì|to give up|4
+丰富|fēngfù|rich, abundant|4
+否则|fǒuzé|otherwise|4
+符合|fúhé|to conform to|4
+父亲|fùqīn|father|4
+付款|fùkuǎn|to pay|4
+负责|fùzé|to be responsible for|4
+辛苦了|xīnkǔ le|thanks for your hard work|W
+请多关照|qǐng duō guānzhào|please look after me (nice to work with you)|W
+麻烦你了|máfan nǐ le|sorry to trouble you|W
+不好意思|bù hǎoyìsi|sorry/excuse me|W
+收到|shōudào|received/got it|W
+没问题|méi wèntí|no problem|W
+我马上处理|wǒ mǎshàng chǔlǐ|I'll handle it right away|W
+我们开个会吧|wǒmen kāi ge huì ba|let's have a meeting|W
+会议几点开始|huìyì jǐ diǎn kāishǐ|what time does the meeting start|W
+我下午有个会|wǒ xiàwǔ yǒu ge huì|I have a meeting this afternoon|W
+请发我邮件|qǐng fā wǒ yóujiàn|please email me|W
+请看附件|qǐng kàn fùjiàn|please see the attachment|W
+请把文件发给我|qǐng bǎ wénjiàn fā gěi wǒ|please send me the file|W
+我稍后回复你|wǒ shāohòu huífù nǐ|I'll reply to you later|W
+我需要一点时间|wǒ xūyào yìdiǎn shíjiān|I need a bit of time|W
+截止日期是什么时候|jiézhǐ rìqī shì shénme shíhou|when is the deadline|W
+我会按时完成|wǒ huì ànshí wánchéng|I'll finish on time|W
+进度怎么样|jìndù zěnmeyàng|how is the progress|W
+项目进展顺利|xiàngmù jìnzhǎn shùnlì|the project is going smoothly|W
+我们遇到了问题|wǒmen yùdào le wèntí|we've run into a problem|W
+你怎么看|nǐ zěnme kàn|what do you think|W
+我同意你的看法|wǒ tóngyì nǐ de kànfǎ|I agree with your view|W
+我有不同的意见|wǒ yǒu bùtóng de yìjiàn|I have a different opinion|W
+能再说一遍吗|néng zài shuō yí biàn ma|could you say that again|W
+我没听清楚|wǒ méi tīng qīngchu|I didn't hear clearly|W
+请确认一下|qǐng quèrèn yíxià|please confirm|W
+请你跟进一下|qǐng nǐ gēnjìn yíxià|please follow up on this|W
+我来负责这个|wǒ lái fùzé zhège|I'll take charge of this|W
+我来总结一下|wǒ lái zǒngjié yíxià|let me summarise|W
+我们达成一致了|wǒmen dáchéng yízhì le|we've reached agreement|W
+下次再讨论|xià cì zài tǎolùn|let's discuss it next time|W
+先这样吧|xiān zhèyàng ba|let's leave it there for now|W
+请稍等|qǐng shāo děng|please wait a moment|W
+我马上到|wǒ mǎshàng dào|I'll be right there|W
+抱歉我迟到了|bàoqiàn wǒ chídào le|sorry I'm late|W
+我想请假|wǒ xiǎng qǐngjià|I'd like to take leave|W
+我今天在家办公|wǒ jīntiān zài jiā bàngōng|I'm working from home today|W
+我们需要加班|wǒmen xūyào jiābān|we need to work overtime|W
+我先走了|wǒ xiān zǒu le|I'm heading off first|W
+下班了|xiàbān le|finished work for the day|W
+周末愉快|zhōumò yúkuài|have a good weekend|W
+有问题随时找我|yǒu wèntí suíshí zhǎo wǒ|contact me anytime if you have questions|W
+保持联系|bǎochí liánxì|keep in touch|W
+感谢大家|gǎnxiè dàjiā|thanks everyone|W
+同事|tóngshì|colleague|W
+老板|lǎobǎn|boss|W
+客户|kèhù|client|W
+预算|yùsuàn|budget|W
+报告|bàogào|report|W
+合同|hétong|contract|W
+日程安排|rìchéng ānpái|schedule|W
+提高效率|tígāo xiàolǜ|to improve efficiency|W
+团队合作|tuánduì hézuò|teamwork|W
+面试|miànshì|job interview|W
+工资|gōngzī|salary|W
+升职|shēngzhí|to be promoted|W
+`;
+
+const EXRAW = `
+阿姨|我阿姨住在悉尼。|Wǒ āyí zhù zài Xīní.|My aunt lives in Sydney.
+矮|他比他哥哥矮。|Tā bǐ tā gēge ǎi.|He is shorter than his older brother.
+爱好|我的爱好是拍照。|Wǒ de àihào shì pāizhào.|My hobby is taking photos.
+安静|图书馆里很安静。|Túshūguǎn lǐ hěn ānjìng.|The library is very quiet.
+把|请把门关上。|Qǐng bǎ mén guānshàng.|Please close the door.
+搬|我们下个月搬家。|Wǒmen xià ge yuè bānjiā.|We are moving house next month.
+办法|我们想一个好办法。|Wǒmen xiǎng yí ge hǎo bànfǎ.|Let's think of a good way.
+办公室|经理在办公室里。|Jīnglǐ zài bàngōngshì lǐ.|The manager is in the office.
+帮忙|谢谢你来帮忙。|Xièxie nǐ lái bāngmáng.|Thanks for coming to help.
+饱|我吃饱了。|Wǒ chībǎo le.|I'm full.
+北方|北方的冬天很冷。|Běifāng de dōngtiān hěn lěng.|Winters in the north are very cold.
+被|我的手机被朋友借走了。|Wǒ de shǒujī bèi péngyou jièzǒu le.|My phone was borrowed by a friend.
+鼻子|他的鼻子很高。|Tā de bízi hěn gāo.|He has a high nose bridge.
+比较|今天比较冷。|Jīntiān bǐjiào lěng.|It's relatively cold today.
+比赛|明天有足球比赛。|Míngtiān yǒu zúqiú bǐsài.|There is a football match tomorrow.
+笔记本|我用笔记本写作业。|Wǒ yòng bǐjìběn xiě zuòyè.|I do my homework on a laptop.
+必须|你必须按时完成。|Nǐ bìxū ànshí wánchéng.|You must finish on time.
+变化|这个城市变化很大。|Zhège chéngshì biànhuà hěn dà.|This city has changed a lot.
+别人|不要看别人的手机。|Búyào kàn biérén de shǒujī.|Don't look at other people's phones.
+冰箱|牛奶在冰箱里。|Niúnǎi zài bīngxiāng lǐ.|The milk is in the fridge.
+才|他十点才起床。|Tā shí diǎn cái qǐchuáng.|He didn't get up until ten.
+菜单|请给我看一下菜单。|Qǐng gěi wǒ kàn yíxià càidān.|Please let me see the menu.
+参加|我想参加这次比赛。|Wǒ xiǎng cānjiā zhè cì bǐsài.|I want to take part in this competition.
+草|公园里的草很绿。|Gōngyuán lǐ de cǎo hěn lǜ.|The grass in the park is very green.
+层|我住在三层。|Wǒ zhù zài sān céng.|I live on the third floor.
+差|现在差五分十点。|Xiànzài chà wǔ fēn shí diǎn.|It's five to ten now.
+超市|我去超市买菜。|Wǒ qù chāoshì mǎi cài.|I'm going to the supermarket to buy groceries.
+衬衫|这件衬衫很好看。|Zhè jiàn chènshān hěn hǎokàn.|This shirt looks nice.
+成绩|他的成绩很好。|Tā de chéngjì hěn hǎo.|His grades are very good.
+城市|墨尔本是一个大城市。|Mò'ěrběn shì yí ge dà chéngshì.|Melbourne is a big city.
+迟到|对不起，我迟到了。|Duìbuqǐ, wǒ chídào le.|Sorry, I'm late.
+出现|他突然出现在门口。|Tā tūrán chūxiàn zài ménkǒu.|He suddenly appeared at the door.
+厨房|妈妈在厨房做饭。|Māma zài chúfáng zuòfàn.|Mum is cooking in the kitchen.
+词典|我用词典查生词。|Wǒ yòng cídiǎn chá shēngcí.|I look up new words in a dictionary.
+聪明|这个孩子很聪明。|Zhège háizi hěn cōngmíng.|This child is very smart.
+打扫|周末我打扫房间。|Zhōumò wǒ dǎsǎo fángjiān.|I clean my room on weekends.
+打算|你打算做什么？|Nǐ dǎsuàn zuò shénme?|What do you plan to do?
+带|别忘了带雨伞。|Bié wàng le dài yǔsǎn.|Don't forget to bring an umbrella.
+担心|别担心，没问题。|Bié dānxīn, méi wèntí.|Don't worry, no problem.
+蛋糕|我给她买了一个蛋糕。|Wǒ gěi tā mǎi le yí ge dàngāo.|I bought her a cake.
+当然|当然可以。|Dāngrán kěyǐ.|Of course you can.
+灯|请把灯关掉。|Qǐng bǎ dēng guāndiào.|Please turn off the light.
+地方|这个地方很漂亮。|Zhège dìfang hěn piàoliang.|This place is beautiful.
+地铁|我坐地铁上班。|Wǒ zuò dìtiě shàngbān.|I take the subway to work.
+地图|我们看一下地图吧。|Wǒmen kàn yíxià dìtú ba.|Let's take a look at the map.
+电梯|电梯坏了。|Diàntī huài le.|The elevator is broken.
+电子邮件|我给你发了一封电子邮件。|Wǒ gěi nǐ fā le yì fēng diànzǐ yóujiàn.|I sent you an email.
+动物|我喜欢拍动物。|Wǒ xǐhuan pāi dòngwù.|I like photographing animals.
+短|这条裙子太短了。|Zhè tiáo qúnzi tài duǎn le.|This skirt is too short.
+锻炼|我每天早上锻炼。|Wǒ měi tiān zǎoshang duànliàn.|I exercise every morning.
+饿|我饿了，我们吃饭吧。|Wǒ è le, wǒmen chīfàn ba.|I'm hungry, let's eat.
+耳朵|他的耳朵很大。|Tā de ěrduo hěn dà.|He has big ears.
+发烧|她昨天发烧了。|Tā zuótiān fāshāo le.|She had a fever yesterday.
+发现|我发现手机不见了。|Wǒ fāxiàn shǒujī bú jiàn le.|I discovered my phone was missing.
+方便|坐地铁很方便。|Zuò dìtiě hěn fāngbiàn.|Taking the subway is very convenient.
+放|请把书放在桌子上。|Qǐng bǎ shū fàng zài zhuōzi shàng.|Please put the book on the table.
+放心|你放心，我会小心的。|Nǐ fàngxīn, wǒ huì xiǎoxīn de.|Rest assured, I'll be careful.
+复习|考试前要好好复习。|Kǎoshì qián yào hǎohāo fùxí.|You should review well before the exam.
+干净|房间很干净。|Fángjiān hěn gānjìng.|The room is very clean.
+敢|你敢一个人去吗？|Nǐ gǎn yí ge rén qù ma?|Do you dare to go alone?
+感冒|我感冒了，不舒服。|Wǒ gǎnmào le, bù shūfu.|I have a cold and feel unwell.
+刚才|他刚才还在这儿。|Tā gāngcái hái zài zhèr.|He was still here just now.
+根据|根据天气预报，明天下雨。|Gēnjù tiānqì yùbào, míngtiān xià yǔ.|According to the forecast it will rain tomorrow.
+跟|我跟朋友去爬山。|Wǒ gēn péngyou qù páshān.|I'm going hiking with a friend.
+更|今天比昨天更热。|Jīntiān bǐ zuótiān gèng rè.|Today is even hotter than yesterday.
+公园|我们去公园散步。|Wǒmen qù gōngyuán sànbù.|We go for a walk in the park.
+故事|他给孩子讲故事。|Tā gěi háizi jiǎng gùshi.|He tells the child a story.
+刮风|今天刮风，很冷。|Jīntiān guāfēng, hěn lěng.|It's windy today and very cold.
+关系|我们的关系很好。|Wǒmen de guānxi hěn hǎo.|Our relationship is very good.
+关心|谢谢你的关心。|Xièxie nǐ de guānxīn.|Thank you for your concern.
+关于|这是关于旅行的书。|Zhè shì guānyú lǚxíng de shū.|This is a book about travel.
+国家|中国是一个大国家。|Zhōngguó shì yí ge dà guójiā.|China is a large country.
+过去|过去他住在北京。|Guòqù tā zhù zài Běijīng.|In the past he lived in Beijing.
+害怕|我害怕蛇。|Wǒ hàipà shé.|I'm afraid of snakes.
+黑板|老师在黑板上写字。|Lǎoshī zài hēibǎn shàng xiězì.|The teacher writes on the blackboard.
+后来|后来我们成了朋友。|Hòulái wǒmen chéng le péngyou.|Later we became friends.
+护照|我的护照在包里。|Wǒ de hùzhào zài bāo lǐ.|My passport is in my bag.
+花|她买了一束花。|Tā mǎi le yí shù huā.|She bought a bunch of flowers.
+画|他画了一张画。|Tā huà le yì zhāng huà.|He drew a picture.
+坏|我的电脑坏了。|Wǒ de diànnǎo huài le.|My computer is broken.
+环境|这里的环境很好。|Zhèlǐ de huánjìng hěn hǎo.|The environment here is very nice.
+换|我想换一个房间。|Wǒ xiǎng huàn yí ge fángjiān.|I'd like to change rooms.
+黄河|黄河是中国的第二长河。|Huáng Hé shì Zhōngguó de dì-èr cháng hé.|The Yellow River is China's second longest river.
+回答|请回答我的问题。|Qǐng huídá wǒ de wèntí.|Please answer my question.
+会议|会议九点开始。|Huìyì jiǔ diǎn kāishǐ.|The meeting starts at nine.
+或者|你喝茶或者咖啡？|Nǐ hē chá huòzhě kāfēi?|Would you like tea or coffee?
+几乎|我几乎每天跑步。|Wǒ jīhū měi tiān pǎobù.|I run almost every day.
+机会|这是一个好机会。|Zhè shì yí ge hǎo jīhuì.|This is a good opportunity.
+记得|你还记得我吗？|Nǐ hái jìde wǒ ma?|Do you still remember me?
+季节|我最喜欢的季节是秋天。|Wǒ zuì xǐhuan de jìjié shì qiūtiān.|My favourite season is autumn.
+检查|医生给他检查身体。|Yīshēng gěi tā jiǎnchá shēntǐ.|The doctor examined his body.
+简单|这个问题很简单。|Zhège wèntí hěn jiǎndān.|This question is very simple.
+健康|身体健康最重要。|Shēntǐ jiànkāng zuì zhòngyào.|Good health is most important.
+见面|我们明天见面吧。|Wǒmen míngtiān jiànmiàn ba.|Let's meet tomorrow.
+讲|老师在讲新课。|Lǎoshī zài jiǎng xīn kè.|The teacher is explaining a new lesson.
+教室|学生们在教室里。|Xuéshengmen zài jiàoshì lǐ.|The students are in the classroom.
+节日|春节是重要的节日。|Chūn Jié shì zhòngyào de jiérì.|Spring Festival is an important holiday.
+结婚|他们去年结婚了。|Tāmen qùnián jiéhūn le.|They got married last year.
+结束|会议结束了。|Huìyì jiéshù le.|The meeting has ended.
+解决|问题已经解决了。|Wèntí yǐjīng jiějué le.|The problem has been solved.
+借|我可以借你的笔吗？|Wǒ kěyǐ jiè nǐ de bǐ ma?|May I borrow your pen?
+经常|他经常去健身房。|Tā jīngcháng qù jiànshēnfáng.|He often goes to the gym.
+经过|我每天经过这家店。|Wǒ měi tiān jīngguò zhè jiā diàn.|I pass this shop every day.
+经理|经理今天不在。|Jīnglǐ jīntiān bú zài.|The manager isn't in today.
+久|我等了很久。|Wǒ děng le hěn jiǔ.|I waited a long time.
+旧|这是一本旧书。|Zhè shì yì běn jiù shū.|This is an old book.
+爱情|他们的爱情很感人。|Tāmen de àiqíng hěn gǎnrén.|Their love story is touching.
+安排|我来安排时间。|Wǒ lái ānpái shíjiān.|I'll arrange the time.
+安全|开车要注意安全。|Kāichē yào zhùyì ānquán.|Pay attention to safety when driving.
+按时|请按时吃药。|Qǐng ànshí chī yào.|Please take your medicine on time.
+棒|你做得真棒！|Nǐ zuò de zhēn bàng!|You did great!
+保护|我们要保护环境。|Wǒmen yào bǎohù huánjìng.|We must protect the environment.
+保证|我保证明天完成。|Wǒ bǎozhèng míngtiān wánchéng.|I guarantee I'll finish tomorrow.
+报名|我已经报名了。|Wǒ yǐjīng bàomíng le.|I've already signed up.
+抱|妈妈抱着孩子。|Māma bàozhe háizi.|Mum is holding the child.
+抱歉|很抱歉让你久等了。|Hěn bàoqiàn ràng nǐ jiǔ děng le.|Sorry to keep you waiting.
+本来|我本来想去，但是没时间。|Wǒ běnlái xiǎng qù, dànshì méi shíjiān.|I originally wanted to go but had no time.
+笨|我真笨，又忘了。|Wǒ zhēn bèn, yòu wàng le.|I'm so dumb, I forgot again.
+比如|我喜欢运动，比如跑步。|Wǒ xǐhuan yùndòng, bǐrú pǎobù.|I like sports, for example running.
+毕业|他明年大学毕业。|Tā míngnián dàxué bìyè.|He graduates from university next year.
+标准|他的普通话很标准。|Tā de pǔtōnghuà hěn biāozhǔn.|His Mandarin is very standard.
+表格|请填一下这个表格。|Qǐng tián yíxià zhège biǎogé.|Please fill in this form.
+表示|他表示同意。|Tā biǎoshì tóngyì.|He indicated agreement.
+表演|他们在台上表演。|Tāmen zài tái shàng biǎoyǎn.|They are performing on stage.
+表扬|老师表扬了他。|Lǎoshī biǎoyáng le tā.|The teacher praised him.
+并且|她聪明，并且努力。|Tā cōngmíng, bìngqiě nǔlì.|She is smart and hardworking too.
+不过|我想去，不过没时间。|Wǒ xiǎng qù, búguò méi shíjiān.|I'd like to go, but I have no time.
+不得不|下雨了，我们不得不回家。|Xià yǔ le, wǒmen bùdébù huíjiā.|It rained so we had no choice but to go home.
+不管|不管多累，他都坚持。|Bùguǎn duō lèi, tā dōu jiānchí.|No matter how tired, he keeps going.
+不仅|他不仅会说中文，还会说日语。|Tā bùjǐn huì shuō Zhōngwén, hái huì shuō Rìyǔ.|He can speak not only Chinese but also Japanese.
+部分|这只是一部分。|Zhè zhǐshì yí bùfen.|This is only a part.
+擦|请把桌子擦干净。|Qǐng bǎ zhuōzi cā gānjìng.|Please wipe the table clean.
+猜|你猜我是谁？|Nǐ cāi wǒ shì shéi?|Guess who I am.
+材料|我在准备材料。|Wǒ zài zhǔnbèi cáiliào.|I'm preparing the materials.
+参观|我们去参观博物馆。|Wǒmen qù cānguān bówùguǎn.|We're going to visit the museum.
+餐厅|这家餐厅很有名。|Zhè jiā cāntīng hěn yǒumíng.|This restaurant is famous.
+厕所|请问，厕所在哪儿？|Qǐngwèn, cèsuǒ zài nǎr?|Excuse me, where is the toilet?
+差不多|我们的年龄差不多。|Wǒmen de niánlíng chàbuduō.|We're about the same age.
+尝|你尝一下这个菜。|Nǐ cháng yíxià zhège cài.|Try this dish.
+超过|他的速度超过了我。|Tā de sùdù chāoguò le wǒ.|His speed exceeded mine.
+成功|祝你成功！|Zhù nǐ chénggōng!|Wishing you success!
+成为|他想成为医生。|Tā xiǎng chéngwéi yīshēng.|He wants to become a doctor.
+诚实|他是个诚实的人。|Tā shì ge chéngshí de rén.|He is an honest person.
+乘坐|我们乘坐飞机去北京。|Wǒmen chéngzuò fēijī qù Běijīng.|We're taking a plane to Beijing.
+重新|请重新输入密码。|Qǐng chóngxīn shūrù mìmǎ.|Please re-enter the password.
+抽烟|这里不能抽烟。|Zhèlǐ bù néng chōuyān.|You can't smoke here.
+出差|我下周去上海出差。|Wǒ xià zhōu qù Shànghǎi chūchāi.|I'm going to Shanghai on a business trip next week.
+出发|我们八点出发。|Wǒmen bā diǎn chūfā.|We set off at eight.
+出生|他出生在上海。|Tā chūshēng zài Shànghǎi.|He was born in Shanghai.
+辞职|他决定辞职。|Tā juédìng cízhí.|He decided to resign.
+从来|我从来没去过那儿。|Wǒ cónglái méi qù guo nàr.|I've never been there.
+粗心|他太粗心了。|Tā tài cūxīn le.|He is too careless.
+存|我每个月存一点钱。|Wǒ měi ge yuè cún yìdiǎn qián.|I save a bit of money every month.
+错误|这是一个错误。|Zhè shì yí ge cuòwù.|This is a mistake.
+答案|你知道答案吗？|Nǐ zhīdào dá'àn ma?|Do you know the answer?
+打招呼|他向我打招呼。|Tā xiàng wǒ dǎ zhāohu.|He greeted me.
+打折|今天所有东西都打折。|Jīntiān suǒyǒu dōngxi dōu dǎzhé.|Everything is discounted today.
+打针|孩子怕打针。|Háizi pà dǎzhēn.|The child is afraid of injections.
+大概|大概需要两个小时。|Dàgài xūyào liǎng ge xiǎoshí.|It will probably take about two hours.
+大使馆|大使馆在市中心。|Dàshǐguǎn zài shì zhōngxīn.|The embassy is in the city centre.
+大约|这里大约有一百人。|Zhèlǐ dàyuē yǒu yì bǎi rén.|There are about a hundred people here.
+戴|他戴着一副眼镜。|Tā dàizhe yí fù yǎnjìng.|He is wearing a pair of glasses.
+代替|没有人能代替他。|Méiyǒu rén néng dàitì tā.|No one can replace him.
+当时|当时我不知道。|Dāngshí wǒ bù zhīdào.|I didn't know at that time.
+到处|到处都是人。|Dàochù dōu shì rén.|There are people everywhere.
+倒|请给我倒杯水。|Qǐng gěi wǒ dào bēi shuǐ.|Please pour me a glass of water.
+道歉|他向我道歉了。|Tā xiàng wǒ dàoqiàn le.|He apologised to me.
+得意|他得意地笑了。|Tā déyì de xiào le.|He smiled proudly.
+低|这里的价格很低。|Zhèlǐ de jiàgé hěn dī.|Prices here are low.
+地球|地球是圆的。|Dìqiú shì yuán de.|The Earth is round.
+地址|请告诉我你的地址。|Qǐng gàosu wǒ nǐ de dìzhǐ.|Please tell me your address.
+调查|警察在调查这件事。|Jǐngchá zài diàochá zhè jiàn shì.|The police are investigating this matter.
+丢|我把钥匙丢了。|Wǒ bǎ yàoshi diū le.|I lost my keys.
+动作|他的动作很快。|Tā de dòngzuò hěn kuài.|His movements are fast.
+堵车|上班时间经常堵车。|Shàngbān shíjiān jīngcháng dǔchē.|There's often a traffic jam at rush hour.
+肚子|我肚子疼。|Wǒ dùzi téng.|I have a stomach ache.
+短信|我给你发了短信。|Wǒ gěi nǐ fā le duǎnxìn.|I sent you a text message.
+对话|我们练习这个对话。|Wǒmen liànxí zhège duìhuà.|We practise this dialogue.
+对面|银行在超市对面。|Yínháng zài chāoshì duìmiàn.|The bank is opposite the supermarket.
+发展|这个城市发展很快。|Zhège chéngshì fāzhǎn hěn kuài.|This city is developing quickly.
+法律|我们要遵守法律。|Wǒmen yào zūnshǒu fǎlǜ.|We must obey the law.
+翻译|你能帮我翻译吗？|Nǐ néng bāng wǒ fānyì ma?|Can you help me translate?
+烦恼|他有很多烦恼。|Tā yǒu hěn duō fánnǎo.|He has a lot of worries.
+反对|我反对这个计划。|Wǒ fǎnduì zhège jìhuà.|I oppose this plan.
+方法|学习有很多方法。|Xuéxí yǒu hěn duō fāngfǎ.|There are many methods of studying.
+方面|在这方面他很有经验。|Zài zhè fāngmiàn tā hěn yǒu jīngyàn.|He is experienced in this respect.
+访问|总统访问了中国。|Zǒngtǒng fǎngwèn le Zhōngguó.|The president visited China.
+放弃|不要轻易放弃。|Búyào qīngyì fàngqì.|Don't give up easily.
+丰富|他的经验很丰富。|Tā de jīngyàn hěn fēngfù.|He has rich experience.
+否则|快走吧，否则会迟到。|Kuài zǒu ba, fǒuzé huì chídào.|Hurry up, otherwise we'll be late.
+符合|这符合要求。|Zhè fúhé yāoqiú.|This meets the requirements.
+父亲|我父亲是老师。|Wǒ fùqīn shì lǎoshī.|My father is a teacher.
+付款|请在这里付款。|Qǐng zài zhèlǐ fùkuǎn.|Please pay here.
+负责|谁负责这个项目？|Shéi fùzé zhège xiàngmù?|Who is responsible for this project?
+`;
+const EX = {};
+EXRAW.trim().split('\n').forEach(l=>{ const [h,s,p,e]=l.split('|'); EX[h]={s,p,e}; });
+
+const $ = id => document.getElementById(id);
+const KEY = 'hsk-srs-v1';
+const DAY = 86400000;
+let S = load();
+function load(){
+  try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s) return s; }catch(e){}
+  return {cards:{}, custom:[], newLimit:15, newLog:{}, level:'3', dir:'f'};
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+/* inline notices (alert() is blocked in some in-app previews) */
+function clearNote(){ $('notice').classList.add('hidden'); }
+function note(msg, btns){
+  $('noteMsg').textContent=msg; const box=$('noteBtns'); box.innerHTML='';
+  (btns||[]).forEach(([label,fn])=>{ const b=document.createElement('button'); b.textContent=label; b.onclick=()=>{ clearNote(); fn(); }; box.appendChild(b); });
+  $('notice').classList.remove('hidden');
+}
+
+function allWords(){
+  const w = RAW.trim().split('\n').map(l=>l.split('|')).map(([h,p,m,l])=>({h,p,m,l}));
+  return w.concat(S.custom);
+}
+function today(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function pool(){
+  return allWords().filter(w => S.level==='34' ? (w.l==='3'||w.l==='4') : w.l===S.level);
+}
+function stats(){
+  const now = Date.now(), p = pool();
+  let due=0, learned=0, fresh=0;
+  p.forEach(w=>{ const c=S.cards[w.h]; if(!c) fresh++; else { learned++; if(c.due<=now) due++; } });
+  const doneNew = S.newLog[today()]||0;
+  const lim = S.newLimit + ((S.bonus&&S.bonus[today()])||0);
+  return {due, learned, fresh, newAvail: Math.max(0, Math.min(fresh, lim - doneNew))};
+}
+function refresh(){
+  const s = stats();
+  $('sDue').textContent=s.due; $('sNew').textContent=s.newAvail; $('sLearned').textContent=s.learned;
+  $('level').value=S.level; $('dir').value=S.dir; $('showEx').checked=S.showEx!==false; $('typeAns').checked=!!S.typeAns; $('newLimit').value=S.newLimit;
+}
+
+let queue=[], cur=null, revealed=false;
+function build(){
+  const now=Date.now(), p=pool();
+  const due = p.filter(w=>S.cards[w.h] && S.cards[w.h].due<=now).sort((a,b)=>S.cards[a.h].due-S.cards[b.h].due);
+  const fresh = p.filter(w=>!S.cards[w.h]);
+  const n = stats().newAvail;
+  queue = due.concat(fresh.slice(0,n));
+}
+function next(){
+  if(!queue.length){ $('study').classList.add('hidden'); $('home').classList.remove('hidden'); refresh(); note('Session complete 🎉 Nice work.'); return; }
+  cur = queue.shift(); revealed=false;
+  cur.d = S.dir==='m' ? (Math.random()<0.5?'f':'b') : S.dir;
+  $('left').textContent = (queue.length+1)+' left';
+  $('show').classList.remove('hidden'); $('rate').classList.add('hidden');
+  document.querySelectorAll('#rate button').forEach(b=>b.classList.remove('pri'));
+  $('fb').textContent='';
+  render();
+  if(S.typeAns){
+    const a=$('ans'); a.value=''; $('ansWrap').classList.remove('hidden');
+    a.placeholder = cur.d==='f' ? 'Type pinyin or English (Enter)' : 'Type 汉字 or pinyin (Enter)';
+    $('show').textContent='Show answer (skip)';
+    a.focus();
+  } else { $('ansWrap').classList.add('hidden'); $('show').textContent='Show answer'; }
+}
+function speak(t){ try{ const u=new SpeechSynthesisUtterance(t); u.lang='zh-CN'; speechSynthesis.cancel(); speechSynthesis.speak(u);}catch(e){} }
+function render(){
+  const f = (cur.d||S.dir)==='f', c=$('cardEl');
+  let h = '';
+  if(f){
+    h += `<div class="hz">${cur.h}</div>`;
+    if(revealed) h += `<div class="py">${cur.p}</div><div class="mn">${cur.m}</div>`;
+  } else {
+    h += `<div class="mn">${cur.m}</div>`;
+    if(revealed) h += `<div class="hz">${cur.h}</div><div class="py">${cur.p}</div>`;
+  }
+  h += `<div class="mut">${cur.l==='W'?'Workplace':'HSK '+cur.l} ${S.cards[cur.h]?'':'· new'}</div>`;
+  const ex = EX[cur.h];
+  if(revealed && ex && S.showEx!==false) h += `<div class="ex">${ex.s}<small>${ex.p}</small><small>${ex.e}</small></div>`;
+  if(revealed) h += `<div><button id="spk">🔊 word</button>${ex&&S.showEx!==false?' <button id="spk2">🔊 sentence</button>':''}</div>`;
+  c.innerHTML = h;
+  if(revealed) $('spk').onclick = ()=>speak(cur.h);
+  if(revealed && $('spk2')) $('spk2').onclick = ()=>speak(ex.s);
+}
+function sched(c, r){
+  // returns new card state (SM-2 style)
+  let {ease=2.5, interval=0, reps=0, lapses=0} = c||{};
+  if(r===0){ reps=0; lapses++; ease=Math.max(1.3,ease-0.2); interval=0; }
+  else {
+    if(reps===0) interval = r===3?4: r===2?1:1;
+    else if(reps===1) interval = r===3?6: r===2?3:2;
+    else interval = Math.max(1, Math.round(interval * (r===1?1.2: r===2?ease: ease*1.3)));
+    if(r===1) ease=Math.max(1.3,ease-0.15);
+    if(r===3) ease+=0.15;
+    reps++;
+  }
+  return {ease, interval, reps, lapses};
+}
+function label(n){ return n===0?'10m': n+'d'; }
+function showRates(){
+  const c=S.cards[cur.h];
+  for(let r=0;r<4;r++) $('i'+r).textContent = label(sched(c,r).interval);
+}
+function reveal(){ revealed=true; render(); $('show').classList.add('hidden'); $('ansWrap').classList.add('hidden'); $('rate').classList.remove('hidden'); showRates(); }
+$('show').onclick = reveal;
+function typedCheck(){
+  if(revealed) return;
+  const v=$('ans').value; if(!v.trim()) return;
+  let ok=false;
+  if(cur.d==='f'){ const a=answersOf(cur); ok = a.has(normPy(v)) || a.has(normEn(v)); }
+  else { ok = v.replace(/\s/g,'')===cur.h.replace(/\s/g,'') || normPy(v)===normPy(cur.p); }
+  $('fb').textContent = ok ? '✓ Correct' : '✗ Not quite — you typed “'+v.trim()+'”';
+  reveal();
+  const best = ok ? 2 : 0;
+  document.querySelector('#rate button[data-r="'+best+'"]').classList.add('pri');
+}
+$('ansWrap').addEventListener('submit',e=>{ e.preventDefault(); typedCheck(); });
+document.querySelectorAll('#rate button').forEach(b=> b.onclick = ()=>{
+  const r=+b.dataset.r, isNew=!S.cards[cur.h];
+  const n = sched(S.cards[cur.h], r);
+  n.due = Date.now() + (n.interval===0 ? 10*60000 : n.interval*DAY);
+  S.cards[cur.h]=n;
+  if(isNew){ S.newLog[today()]=(S.newLog[today()]||0)+1; }
+  save();
+  if(r===0) queue.push(cur);
+  next();
+});
+function startStudy(){ $('home').classList.add('hidden'); $('study').classList.remove('hidden'); next(); }
+function nothingDue(){
+  const p=pool(), seen=p.filter(w=>S.cards[w.h]), fresh=p.filter(w=>!S.cards[w.h]).length, btns=[];
+  if(fresh) btns.push(['Learn 10 more new cards',()=>{ S.bonus=S.bonus||{}; S.bonus[today()]=(S.bonus[today()]||0)+10; save(); refresh(); $('start').click(); }]);
+  if(seen.length) btns.push(['Review ahead',()=>{ queue=seen.slice().sort((a,b)=>S.cards[a.h].due-S.cards[b.h].due).slice(0,20); startStudy(); }]);
+  note(p.length?'You’re all caught up: nothing is due and today’s new-card limit is used.':'There are no cards in this deck.', btns);
+}
+$('start').onclick = ()=>{ clearNote(); build(); if(!queue.length){ nothingDue(); return; } startStudy(); };
+$('back').onclick = ()=>{ $('study').classList.add('hidden'); $('home').classList.remove('hidden'); refresh(); };
+$('level').onchange = e=>{ S.level=e.target.value; save(); refresh(); };
+$('dir').onchange = e=>{ S.dir=e.target.value; save(); };
+$('showEx').onchange = e=>{ S.showEx=e.target.checked; save(); };
+$('typeAns').onchange = e=>{ S.typeAns=e.target.checked; save(); };
+$('newLimit').onchange = e=>{ S.newLimit=Math.max(0,+e.target.value||0); save(); refresh(); };
+$('imp').onclick = ()=>{
+  const lines = $('csv').value.split('\n').map(l=>l.trim()).filter(Boolean);
+  const have = new Set(allWords().map(w=>w.h)); let n=0;
+  lines.forEach(l=>{ const [h,p,m,lv] = l.split(/[,\t|]/).map(x=>x.trim()); if(h&&p&&m&&!have.has(h)){ S.custom.push({h,p,m,l:(lv==='4'?'4':lv==='W'?'W':'3')}); have.add(h); n++; } });
+  save(); refresh(); $('msg').textContent = n+' words added.'; $('csv').value='';
+};
+$('exp').onclick = ()=>{
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));
+  a.download='hsk-srs-progress.json'; a.click();
+};
+$('impP').onclick = ()=>$('file').click();
+$('file').onchange = e=>{
+  const f=e.target.files[0]; if(!f) return;
+  f.text().then(t=>{ try{ S=JSON.parse(t); save(); refresh(); $('msg').textContent='Progress restored.'; }catch(x){ $('msg').textContent='Invalid file.'; } });
+};
+refresh();
+
+/* ---------- Games ---------- */
+function show(id){ ['home','study','match','fall','cards'].forEach(x=>$(x).classList.toggle('hidden',x!==id)); if(id==='home') refresh(); }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function hiText(){ $('hi').textContent = 'High score: '+(S.hiFall||0)+(S.hiMatch?' · Best match: '+S.hiMatch+'s':''); }
+hiText();
+
+/* Match game */
+let mt=null, mTimer=null;
+function matchStart(){
+  const p=pool(); if(p.length<6){ note('Need at least 6 words in this level.'); return; }
+  const picks=shuffle(p.slice()).slice(0,6), tiles=[];
+  picks.forEach(w=>{ tiles.push({id:w.h,html:w.h,big:1}); tiles.push({id:w.h,html:'<span style="color:var(--acc)">'+w.p+'</span><br><small>'+w.m+'</small>'}); });
+  mt={tiles:shuffle(tiles),sel:null,done:0,miss:0,t0:Date.now(),lock:false};
+  $('mDone').classList.add('hidden'); show('match');
+  const g=$('mGrid'); g.innerHTML='';
+  mt.tiles.forEach((t,i)=>{
+    const b=document.createElement('button'); b.className='tile'+(t.big?' big':''); b.innerHTML='<div>'+t.html+'</div>';
+    b.onclick=()=>matchClick(i,b); t.el=b; g.appendChild(b);
+  });
+  clearInterval(mTimer);
+  mTimer=setInterval(()=>{ $('mInfo').textContent=Math.floor((Date.now()-mt.t0)/1000)+'s · misses '+mt.miss; },250);
+}
+function matchClick(i,b){
+  if(mt.lock) return;
+  if(mt.sel===null){ mt.sel=i; b.classList.add('sel'); return; }
+  if(mt.sel===i){ b.classList.remove('sel'); mt.sel=null; return; }
+  const a=mt.tiles[mt.sel], c=mt.tiles[i];
+  if(a.id===c.id){
+    a.el.classList.remove('sel'); a.el.classList.add('ok'); c.el.classList.add('ok');
+    mt.sel=null; mt.done++;
+    if(mt.done===6){
+      clearInterval(mTimer);
+      const s=Math.round((Date.now()-mt.t0)/100)/10;
+      if(!S.hiMatch||s<S.hiMatch){ S.hiMatch=s; save(); }
+      $('mRes').textContent='Done in '+s+'s with '+mt.miss+' misses. Best: '+S.hiMatch+'s';
+      $('mDone').classList.remove('hidden');
+    }
+  } else {
+    mt.miss++; mt.lock=true; a.el.classList.add('bad'); c.el.classList.add('bad');
+    setTimeout(()=>{ a.el.classList.remove('bad','sel'); c.el.classList.remove('bad'); mt.sel=null; mt.lock=false; },500);
+  }
+}
+$('gMatch').onclick=matchStart;
+$('mAgain').onclick=matchStart;
+$('mBack').onclick=()=>{ clearInterval(mTimer); hiText(); show('home'); };
+
+/* Falling words game */
+let fg=null;
+const normPy=s=>s.toLowerCase().replace(/v/g,'u').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]/g,'');
+const normEn=s=>s.toLowerCase().replace(/[^a-z ]/g,'').replace(/\s+/g,' ').trim();
+function answersOf(w){
+  const a=new Set([normPy(w.p)]);
+  w.m.split(/[;,\/]/).forEach(s=>{ s=normEn(s.replace(/\(.*?\)/g,'')); if(s){ a.add(s); a.add(s.replace(/^to /,'')); } });
+  a.delete(''); return a;
+}
+function fallStart(){
+  const p=pool(); if(p.length<4){ note('Need more words in this level.'); return; }
+  if(fg) fg.run=false;
+  $('sky').innerHTML='';
+  fg={words:[],score:0,lives:3,combo:0,run:true,pool:p,t0:performance.now(),last:performance.now(),spawn:0.3};
+  show('fall'); $('fin').value=''; $('fMsg').textContent=''; fallHud(); $('fin').focus();
+  requestAnimationFrame(fallLoop);
+}
+function fallHud(){
+  const lv=1+Math.floor((performance.now()-fg.t0)/15000);
+  $('fScore').textContent='Score '+fg.score+(fg.combo>1?' ×'+fg.combo:'');
+  $('fLevel').textContent='Lv '+lv;
+  $('fLives').textContent='♥'.repeat(Math.max(0,fg.lives))+'♡'.repeat(Math.max(0,3-fg.lives));
+}
+function fallSpawn(){
+  const onScreen=new Set(fg.words.map(w=>w.w.h));
+  const opts=fg.pool.filter(w=>!onScreen.has(w.h)); if(!opts.length) return;
+  const w=opts[Math.floor(Math.random()*opts.length)];
+  const el=document.createElement('div'); el.className='fw'; el.textContent=w.h;
+  const sky=$('sky'); sky.appendChild(el);
+  const x=Math.random()*Math.max(10,sky.clientWidth-el.offsetWidth-10)+5;
+  el.style.left=x+'px'; el.style.top='0px';
+  fg.words.push({w,el,y:-40,ans:answersOf(w)});
+}
+function fallLoop(now){
+  if(!fg||!fg.run) return;
+  const dt=Math.min(0.1,(now-fg.last)/1000); fg.last=now;
+  const el=(now-fg.t0)/1000;
+  const speed=Math.min(200,32+el*1.6);           // px/s gets faster
+  const gap=Math.max(0.9,3.2-el*0.03);           // words appear more often
+  fg.spawn-=dt; if(fg.spawn<=0){ fallSpawn(); fg.spawn=gap; }
+  const H=$('sky').clientHeight;
+  fg.words.slice().forEach(o=>{
+    o.y+=speed*dt; o.el.style.top=o.y+'px';
+    if(o.y>H-44) fallMiss(o);
+  });
+  fallHud();
+  if(fg.run) requestAnimationFrame(fallLoop);
+}
+function fallRemove(o){ o.el.remove(); fg.words=fg.words.filter(x=>x!==o); }
+function fallMiss(o){
+  fallRemove(o); fg.lives--; fg.combo=0;
+  $('fMsg').textContent='Missed: '+o.w.h+' · '+o.w.p+' · '+o.w.m;
+  if(fg.lives<=0) fallEnd();
+}
+function fallCheck(enter){
+  if(!fg||!fg.run) return;
+  const v=$('fin').value, py=normPy(v), en=normEn(v);
+  if(!py&&!en) return;
+  const hits=fg.words.filter(o=>o.ans.has(py)||o.ans.has(en)).sort((a,b)=>b.y-a.y);
+  if(hits.length){
+    const o=hits[0]; fallRemove(o); fg.combo++;
+    fg.score+=10+Math.min(fg.combo,10)*2;
+    $('fMsg').textContent='✓ '+o.w.h+' · '+o.w.p+' · '+o.w.m;
+    $('fin').value='';
+  } else if(enter){
+    fg.combo=0; $('fin').value='';
+  }
+}
+function fallEnd(){
+  fg.run=false;
+  if(fg.score>(S.hiFall||0)){ S.hiFall=fg.score; save(); }
+  const ov=document.createElement('div'); ov.className='overlay';
+  ov.innerHTML='<h2 style="margin:0">Game over</h2><div>Score '+fg.score+'</div><div class="mut" style="color:#ddd">High score '+S.hiFall+'</div>';
+  const b=document.createElement('button'); b.className='pri'; b.textContent='Play again'; b.onclick=fallStart;
+  ov.appendChild(b); $('sky').appendChild(ov);
+}
+$('fin').addEventListener('input',()=>fallCheck(false));
+$('fin').addEventListener('keydown',e=>{ if(e.key==='Enter') fallCheck(true); });
+$('gFall').onclick=fallStart;
+$('fBack').onclick=()=>{ if(fg) fg.run=false; hiText(); show('home'); };
+
+/* Card browser */
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function cState(w){ const c=S.cards[w.h]; if(!c) return 'New'; if(c.reps===0) return 'Learning'; return c.interval<21?'Young':'Mature'; }
+const ORDER={New:0,Learning:1,Young:2,Mature:3};
+let cAsc=true;
+function dueText(c){
+  if(!c) return '—';
+  const d=c.due-Date.now();
+  if(d<=0) return 'due now';
+  if(d<DAY) return 'in '+Math.max(1,Math.round(d/3600000))+'h';
+  return 'in '+Math.round(d/DAY)+'d';
+}
+function cardsRender(){
+  const lv=$('cLevel').value, st=$('cState').value, q=$('cSearch').value.trim().toLowerCase(), key=$('cSort').value, now=Date.now();
+  let rows=allWords().map((w,i)=>({w,i,c:S.cards[w.h],s:cState(w)}));
+  rows=rows.filter(r=>
+    (!lv||r.w.l===lv) &&
+    (!st||(st==='Due'?(r.c&&r.c.due<=now):r.s===st)) &&
+    (!q||(r.w.h+' '+r.w.p+' '+normPy(r.w.p)+' '+r.w.m).toLowerCase().includes(q))
+  );
+  const val=r=>{
+    switch(key){
+      case 'state': return ORDER[r.s];
+      case 'interval': return r.c?r.c.interval:-1;
+      case 'ease': return r.c?r.c.ease:-1;
+      case 'due': return r.c?r.c.due:Infinity;
+      case 'lapses': return r.c?r.c.lapses||0:-1;
+      case 'level': return +r.w.l;
+      case 'pinyin': return normPy(r.w.p);
+      default: return r.i;
+    }
+  };
+  rows.sort((a,b)=>{ const x=val(a), y=val(b); const r=x<y?-1:x>y?1:a.i-b.i; return cAsc?r:-r; });
+  $('cCount').textContent=rows.length+' cards';
+  $('cDir').textContent=cAsc?'↑':'↓';
+  $('cList').innerHTML=rows.map(r=>{
+    const c=r.c, pct=c?Math.min(100,Math.round(c.interval/30*100)):0;
+    const stat=c?'interval '+c.interval+'d · ease '+c.ease.toFixed(2)+' · reps '+c.reps+' · lapses '+(c.lapses||0)+' · '+dueText(c):'not studied yet';
+    return '<div class="crow"><div class="hz2">'+esc(r.w.h)+'</div><div class="mid">'
+      +'<div><span class="p">'+esc(r.w.p)+'</span> <span class="m">'+esc(r.w.m)+'</span></div>'
+      +'<div style="margin-top:4px"><span class="badge">'+(r.w.l==='W'?'Work':'HSK '+r.w.l)+'</span><span class="badge '+r.s+'">'+r.s+'</span><span class="mut" style="font-size:12px">'+stat+'</span></div>'
+      +(EX[r.w.h]?'<div class="mut" style="font-size:12px;margin-top:4px">'+esc(EX[r.w.h].s)+' · '+esc(EX[r.w.h].e)+'</div>':'')
+      +'<div class="bar"><i style="width:'+pct+'%"></i></div></div></div>';
+  }).join('');
+}
+['cLevel','cState','cSort'].forEach(id=>$(id).onchange=cardsRender);
+$('cSearch').oninput=cardsRender;
+$('cDir').onclick=()=>{ cAsc=!cAsc; cardsRender(); };
+$('gCards').onclick=()=>{ show('cards'); cardsRender(); };
+$('cBack').onclick=()=>show('home');
+</script>
+<script>
+if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('./sw.js').catch(()=>{}); }); }
+</script>
+</body>
+</html>
