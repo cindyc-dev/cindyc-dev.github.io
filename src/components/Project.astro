@@ -26,7 +26,7 @@ const { url, github, tags, title, description, date, otherTags, images } =
         url && (
           <a
             href={url}
-            target="_blank"
+            target="_blank" rel="noopener noreferrer"
             class="ml-2 unset transition-[background-size] duration-300 bg-gradient-to-r bg-left-bottom bg-no-repeat bg-[length:0%_55%] hover:bg-[length:100%_55%] dark:bg-[length:0%_2px] hover:dark:bg-[length:100%_2px] from-primary-blue to-primary-blue dark:from-primary-blue dark:to-primary-blue"
           >
             <i class="ml-1 mr-1 text-[12px] pb-2 fa-solid fa-up-right-from-square" />
@@ -38,7 +38,7 @@ const { url, github, tags, title, description, date, otherTags, images } =
           <a
             class="unset rounded-sm transition-[background-size] duration-150 ease-in-out bg-left-bottom bg-[length:0%_55%] hover:bg-[length:100%_55%] bg-no-repeat bg-gradient-to-r from-primary-blue to-primary-blue dark:bg-none dark:hover:text-primary-blue"
             href={`https://github.com/${GITHUB_USERNAME}/${github}`}
-            target="_blank"
+            target="_blank" rel="noopener noreferrer"
             aria-label="Cindy on GitHub"
           >
             <i

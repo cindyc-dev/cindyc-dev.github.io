@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@astrojs/prism": "^4.0.2",
-    "@astrojs/react": "^6.0.5",
+    "@astrojs/react": "^7.1.4",
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.4",
     "@codemirror/lang-python": "^6.2.1",
@@ -27,12 +27,9 @@
     "codemirror": "^6.0.2",
     "globby": "^16.2.4",
     "gray-matter": "^4.0.3",
-    "mermaid": "^11.17.2",
-    "pyodide": "^314.0.6",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "slugify": "^1.6.9",
-    "svg-pan-zoom": "^3.6.2",
     "tailwindcss": "^4.3.3",
     "zod": "^4.5.4"
   },
@@ -40,5 +37,13 @@
     "@astrojs/check": "^0.9.10",
     "prettier-plugin-astro": "^0.14.1",
     "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "astro-markdoc-renderer": {
+      "markdown-it": "^15.0.3"
+    },
+    "@tailwindcss/typography": {
+      "postcss-selector-parser": "^6.1.5"
+    }
   }
 }
