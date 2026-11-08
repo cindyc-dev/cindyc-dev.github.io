@@ -1,0 +1,14 @@
+{
+  "name": "HSK 3-4 Flashcards",
+  "short_name": "HSK SRS",
+  "description": "Offline spaced-repetition flashcards for HSK 3-4 and workplace Chinese",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#faf8f5",
+  "theme_color": "#c0392b",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
