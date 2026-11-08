@@ -9,8 +9,6 @@
 
 <script>
   const mermaidCodes = document.querySelectorAll("#mermaid-code");
-  console.log({ mermaidCodes: mermaidCodes });
-
   const mermaidDiagrams = document.querySelectorAll(".mermaid");
   const showHideButtons = document.querySelectorAll("#show-hide-button");
 
@@ -18,10 +16,8 @@
     const mermaidCode = mermaidCodes[i] as HTMLElement;
     const mermaidDiagram = mermaidDiagrams[i] as HTMLElement;
 
-    mermaidDiagram.innerHTML = mermaidCode.innerText;
-    const showHideButton = showHideButtons[i] as HTMLElement;
-    const isShowMermaid = showHideButton.dataset.showMermaid;
-    console.log({ isShowMermaid: isShowMermaid });
+    // Copy the diagram source as plain text (never parse it as HTML).
+    mermaidDiagram.textContent = mermaidCode.innerText;
 
     showHideButtons[i].addEventListener("click", () => {
       mermaidCode.classList.toggle("hidden");
@@ -30,9 +26,8 @@
 </script>
 
 <script type="module">
-  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
-  mermaid.initialize({ startOnLoad: true });
-  console.log("Loaded Mermaid!");
+  // Pinned to an exact version: a floating major tag pulls in whatever is
+  // published next, and older 10.x/11.x builds bundle a vulnerable KaTeX.
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@12.3.0/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "strict" });
 </script>
-
-<script></script>

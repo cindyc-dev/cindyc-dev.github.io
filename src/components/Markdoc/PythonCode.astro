@@ -2,11 +2,6 @@
 const { isRunnable } = Astro.props;
 ---
 
-<head>
-  <script src="https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js"
-  ></script>
-</head>
-
 <div class={isRunnable ? `text-sm` : `text-sm hidden`}>
   <button id="runcode" class="code-button"
     ><i class="fa-solid fa-play"></i> Run Code</button

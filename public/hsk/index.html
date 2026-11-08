@@ -617,6 +617,8 @@ const EX = {};
 EXRAW.trim().split('\n').forEach(l=>{ const [h,s,p,e]=l.split('|'); EX[h]={s,p,e}; });
 
 const $ = id => document.getElementById(id);
+/* escape user/imported text before it goes into innerHTML */
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 const KEY = 'hsk-srs-v1';
 const DAY = 86400000;
 let S = load();
@@ -684,15 +686,15 @@ function render(){
   const f = (cur.d||S.dir)==='f', c=$('cardEl');
   let h = '';
   if(f){
-    h += `<div class="hz">${cur.h}</div>`;
-    if(revealed) h += `<div class="py">${cur.p}</div><div class="mn">${cur.m}</div>`;
+    h += `<div class="hz">${esc(cur.h)}</div>`;
+    if(revealed) h += `<div class="py">${esc(cur.p)}</div><div class="mn">${esc(cur.m)}</div>`;
   } else {
-    h += `<div class="mn">${cur.m}</div>`;
-    if(revealed) h += `<div class="hz">${cur.h}</div><div class="py">${cur.p}</div>`;
+    h += `<div class="mn">${esc(cur.m)}</div>`;
+    if(revealed) h += `<div class="hz">${esc(cur.h)}</div><div class="py">${esc(cur.p)}</div>`;
   }
-  h += `<div class="mut">${cur.l==='W'?'Workplace':'HSK '+cur.l} ${S.cards[cur.h]?'':'· new'}</div>`;
+  h += `<div class="mut">${cur.l==='W'?'Workplace':'HSK '+esc(cur.l)} ${S.cards[cur.h]?'':'· new'}</div>`;
   const ex = EX[cur.h];
-  if(revealed && ex && S.showEx!==false) h += `<div class="ex">${ex.s}<small>${ex.p}</small><small>${ex.e}</small></div>`;
+  if(revealed && ex && S.showEx!==false) h += `<div class="ex">${esc(ex.s)}<small>${esc(ex.p)}</small><small>${esc(ex.e)}</small></div>`;
   if(revealed) h += `<div><button id="spk">🔊 word</button>${ex&&S.showEx!==false?' <button id="spk2">🔊 sentence</button>':''}</div>`;
   c.innerHTML = h;
   if(revealed) $('spk').onclick = ()=>speak(cur.h);
@@ -769,7 +771,7 @@ $('exp').onclick = ()=>{
 $('impP').onclick = ()=>$('file').click();
 $('file').onchange = e=>{
   const f=e.target.files[0]; if(!f) return;
-  f.text().then(t=>{ try{ S=JSON.parse(t); save(); refresh(); $('msg').textContent='Progress restored.'; }catch(x){ $('msg').textContent='Invalid file.'; } });
+  f.text().then(t=>{ try{ const d=JSON.parse(t); if(!d||typeof d!=='object'||Array.isArray(d)||typeof d.cards!=='object'||!Array.isArray(d.custom)) throw 0; S=d; save(); refresh(); $('msg').textContent='Progress restored.'; }catch(x){ $('msg').textContent='Invalid file.'; } });
 };
 refresh();
 
@@ -784,7 +786,7 @@ let mt=null, mTimer=null;
 function matchStart(){
   const p=pool(); if(p.length<6){ note('Need at least 6 words in this level.'); return; }
   const picks=shuffle(p.slice()).slice(0,6), tiles=[];
-  picks.forEach(w=>{ tiles.push({id:w.h,html:w.h,big:1}); tiles.push({id:w.h,html:'<span style="color:var(--acc)">'+w.p+'</span><br><small>'+w.m+'</small>'}); });
+  picks.forEach(w=>{ tiles.push({id:w.h,html:esc(w.h),big:1}); tiles.push({id:w.h,html:'<span style="color:var(--acc)">'+esc(w.p)+'</span><br><small>'+esc(w.m)+'</small>'}); });
   mt={tiles:shuffle(tiles),sel:null,done:0,miss:0,t0:Date.now(),lock:false};
   $('mDone').classList.add('hidden'); show('match');
   const g=$('mGrid'); g.innerHTML='';
@@ -891,7 +893,7 @@ function fallEnd(){
   fg.run=false;
   if(fg.score>(S.hiFall||0)){ S.hiFall=fg.score; save(); }
   const ov=document.createElement('div'); ov.className='overlay';
-  ov.innerHTML='<h2 style="margin:0">Game over</h2><div>Score '+fg.score+'</div><div class="mut" style="color:#ddd">High score '+S.hiFall+'</div>';
+  ov.innerHTML='<h2 style="margin:0">Game over</h2><div>Score '+fg.score+'</div><div class="mut" style="color:#ddd">High score '+esc(S.hiFall)+'</div>';
   const b=document.createElement('button'); b.className='pri'; b.textContent='Play again'; b.onclick=fallStart;
   ov.appendChild(b); $('sky').appendChild(ov);
 }
@@ -901,7 +903,6 @@ $('gFall').onclick=fallStart;
 $('fBack').onclick=()=>{ if(fg) fg.run=false; hiText(); show('home'); };
 
 /* Card browser */
-const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 function cState(w){ const c=S.cards[w.h]; if(!c) return 'New'; if(c.reps===0) return 'Learning'; return c.interval<21?'Young':'Mature'; }
 const ORDER={New:0,Learning:1,Young:2,Mature:3};
 let cAsc=true;
@@ -936,11 +937,11 @@ function cardsRender(){
   $('cCount').textContent=rows.length+' cards';
   $('cDir').textContent=cAsc?'↑':'↓';
   $('cList').innerHTML=rows.map(r=>{
-    const c=r.c, pct=c?Math.min(100,Math.round(c.interval/30*100)):0;
+    const c=r.c, pct=c?Math.min(100,Math.round(Number(c.interval)/30*100))||0:0;
     const stat=c?'interval '+c.interval+'d · ease '+c.ease.toFixed(2)+' · reps '+c.reps+' · lapses '+(c.lapses||0)+' · '+dueText(c):'not studied yet';
     return '<div class="crow"><div class="hz2">'+esc(r.w.h)+'</div><div class="mid">'
       +'<div><span class="p">'+esc(r.w.p)+'</span> <span class="m">'+esc(r.w.m)+'</span></div>'
-      +'<div style="margin-top:4px"><span class="badge">'+(r.w.l==='W'?'Work':'HSK '+r.w.l)+'</span><span class="badge '+r.s+'">'+r.s+'</span><span class="mut" style="font-size:12px">'+stat+'</span></div>'
+      +'<div style="margin-top:4px"><span class="badge">'+(r.w.l==='W'?'Work':'HSK '+esc(r.w.l))+'</span><span class="badge '+esc(r.s)+'">'+esc(r.s)+'</span><span class="mut" style="font-size:12px">'+esc(stat)+'</span></div>'
       +(EX[r.w.h]?'<div class="mut" style="font-size:12px;margin-top:4px">'+esc(EX[r.w.h].s)+' · '+esc(EX[r.w.h].e)+'</div>':'')
       +'<div class="bar"><i style="width:'+pct+'%"></i></div></div></div>';
   }).join('');
